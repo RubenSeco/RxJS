@@ -1,0 +1,56 @@
+
+import { catchError, exhaustMap, fromEvent, map, merge, mergeMap, of, switchMap, tap } from "rxjs";
+import { ajax } from "rxjs/ajax";
+
+
+// Helper
+
+const requestHttpLogin = (userPass) => {
+
+  return ajax.post("https://reqres.in/api/login?delay=1", userPass).pipe(
+    map(response => response.response["token"]),
+    catchError(error => of("error")),
+  );
+};
+
+// Creando un formulario
+
+const form = document.createElement("form");
+const inputEmail = document.createElement("input");
+const inputPass = document.createElement("input");
+const submitBtn = document.createElement("button");
+
+
+// Configuraciones
+
+inputEmail.type = "email";
+inputEmail.value = "eve.holt@reqres.in";
+inputEmail.placeholder = "Email";
+
+inputPass.type = "password";
+inputPass.value = "cityslicka";
+inputPass.placeholder = "Password";
+
+submitBtn.innerHTML = "Submit";
+
+form.append(inputEmail, inputPass, submitBtn);
+
+document.querySelector("body").append(form);
+
+
+// Streams
+
+const submitForm$ = fromEvent(form, "submit").pipe(
+  tap((event) => event.preventDefault()),
+  map((event) => ({
+    email: event.target[0].value,
+    password: event.target[1].value,
+  })),
+  // mergeMap(requestHttpLogin),
+  // switchMap(requestHttpLogin),
+  exhaustMap(requestHttpLogin),
+
+);
+
+submitForm$.subscribe((token) => console.log(token))
+
